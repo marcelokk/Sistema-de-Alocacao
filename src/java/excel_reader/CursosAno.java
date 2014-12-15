@@ -7,26 +7,35 @@ import model.CursoAno;
 
 public class CursosAno extends ExcelReader {
 
-    ArrayList<CursoAno> cursos;
-
+    private ArrayList<CursoAno> cursos;
+	
     public CursosAno(String nome) {
         super(nome, 0);
         cursos = new ArrayList();
+		nCols = 3;
     }
 
     @Override
     protected void readColumns(Row row) {
+		if(!checkExcel(row)){
+			System.err.println("Curso, linhas " + row.getRowNum() + " e' null");
+			return;
+		}
+		
         // ****** Tabela CursoAno ******
         // sigla
         Cell tempCell = row.getCell(0);
-        String sigla = tempCell.getStringCellValue();
+		tempCell.setCellType(Cell.CELL_TYPE_STRING);		
+        String sigla = tempCell.getStringCellValue().trim();
 
         // curso
         tempCell = row.getCell(1);
-        String curso = tempCell.getStringCellValue();
+		tempCell.setCellType(Cell.CELL_TYPE_STRING);		
+        String curso = tempCell.getStringCellValue().trim();
 
         // perido
         tempCell = row.getCell(2);
+		tempCell.setCellType(Cell.CELL_TYPE_NUMERIC);		
         Double valor = tempCell.getNumericCellValue();
         Integer periodo = valor.intValue();
 

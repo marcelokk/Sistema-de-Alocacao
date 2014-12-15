@@ -2,27 +2,13 @@ package model;
 
 public class Sala {
 
-	//private static int nextId = 0;
-	//private int id;
 	private String sala;
 	private int capacidade;
 	private int vazia;
 	private int andar;
 
 	public Sala() {
-	//	this.id = nextId;
-	//	nextId++;
 	}
-	
-	/*
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
-	*/
 
 	public String getSala() {
 		return sala;

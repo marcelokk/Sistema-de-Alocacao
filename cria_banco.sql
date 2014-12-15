@@ -53,7 +53,7 @@ create table CursoAno(
     periodo	smallint,
     PRIMARY KEY(codigo)
 );
-
+    
 create table Recurso_has_Sala(
     codigo_recurso 	integer,
     nome_sala 			varchar,
@@ -79,7 +79,7 @@ create table Andar(
     id_bloco 		varchar,
     numero_andar 	integer,
 	PRIMARY KEY(id),
-    FOREIGN KEY(id_bloco) REFERENCES Bloco_Instituto(id)
+    FOREIGN KEY(id_bloco) REFERENCES Bloco(id)
 );
 
 -- mudei o nome de bloco_instituto para bloco
@@ -100,7 +100,7 @@ create table Tipo_reserva(
 create table Horario(
     id integer,
     inicio integer,
-    fim integer,
+    --fim integer,
     diasem integer,
     PRIMARY KEY(id)
 );
@@ -123,14 +123,6 @@ create table Horario_Turma(
     FOREIGN KEY(id_horario) REFERENCES Horario(id)
 );
 
-create table Semestre(
-    ano integer,
-    numsem integer,
-    inicio text,
-    fim text,
-    PRIMARY KEY(ano, numsem)
-);
-
 create table Horario_Sala(
     nome_sala varchar,
     id_horario integer,
@@ -139,8 +131,16 @@ create table Horario_Sala(
     codigo_reserva integer,
     PRIMARY KEY(nome_sala, id_horario, codigo_turma, Data_2),
     FOREIGN KEY(nome_sala) REFERENCES Sala(nome),
-    FOREIGN KEY(id_horario) REFERENCES Horario_Turma(id_horario),
-    FOREIGN KEY(codigo_turma) REFERENCES Horario_Turma(codigo_turma)
+    FOREIGN KEY(id_horario) REFERENCES Horario(id),
+    FOREIGN KEY(codigo_turma) REFERENCES Turma(codigo)
+);
+
+create table Semestre(
+    ano integer,
+    numsem integer,
+    inicio text,
+    fim text,
+    PRIMARY KEY(ano, numsem)
 );
 
 -- agora a prioridade e' por sala e nao por bloco

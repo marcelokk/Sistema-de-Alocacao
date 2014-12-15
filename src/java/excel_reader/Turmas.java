@@ -14,10 +14,16 @@ public class Turmas extends ExcelReader {
 	public Turmas(String nome) {
 		super(nome, 3);
 		turmas = new ArrayList();
+		nCols = 4;
 	}
 
 	@Override
 	protected void readColumns(Row row) {
+		if(!checkExcel(row)){
+			System.err.println("Turmas, linhas " + row.getRowNum() + " e' null");
+			return;
+		}	
+		
 		if(row.getCell(0).getStringCellValue().isEmpty())
 			return;
 		
@@ -25,12 +31,12 @@ public class Turmas extends ExcelReader {
 		// curso
 		Cell tempCell = row.getCell(0);
 		tempCell.setCellType(Cell.CELL_TYPE_STRING);
-		String curso = tempCell.getStringCellValue();
-
+		String curso = tempCell.getStringCellValue().trim();
+		
 		// sigla disciplina
 		tempCell = row.getCell(1);
 		tempCell.setCellType(Cell.CELL_TYPE_STRING);
-		String disciplina = tempCell.getStringCellValue();
+		String disciplina = tempCell.getStringCellValue().trim();
 
 		// inscritos
 		tempCell = row.getCell(2);
@@ -46,13 +52,22 @@ public class Turmas extends ExcelReader {
 			if (row.getCell(i) == null || row.getCell(i).getCellType() == HSSFCell.CELL_TYPE_BLANK) {
 				break;
 			}
-
-			String hora = row.getCell(i).getStringCellValue();
+			
+			tempCell.setCellType(Cell.CELL_TYPE_STRING);
+			String hora = row.getCell(i).getStringCellValue().trim();	
+			
 			String[] tokens = hora.split("[ ]+", 2);
+			if(tokens.length == 1) {
+				tokens = hora.split("\\.", 2);
+			}
+			
 			tokens = tokens[1].split("/");
 			
 			String comeco = new String(tokens[0].replaceAll("\\s", ""));
+			comeco = comeco.trim();
+			
 			String fim = new String(tokens[1].replaceAll("\\s", ""));
+			fim = fim.trim();
 			
 			if (hora.regionMatches(true, 0, "Seg", 0, 3)) {
 				h = new Horario(Horario.SEGUNDA, comeco, fim);

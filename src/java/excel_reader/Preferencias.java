@@ -20,13 +20,19 @@ public class Preferencias extends ExcelReader {
 	@Override
 	protected void readColumns(Row row) {
 
+		if (!checkExcel(row)) {
+			System.err.println("Preferencias, linhas " + row.getRowNum() + " e' null");
+			return;
+		}
+
 		boolean skip = true;
 		String sala = null;
 
 		for (Cell tempCell : row) {
 
 			if (skip == true) {
-				sala = tempCell.getStringCellValue();
+				tempCell.setCellType(Cell.CELL_TYPE_STRING);
+				sala = tempCell.getStringCellValue().trim();
 				skip = false;
 				continue;
 			}
@@ -35,6 +41,7 @@ public class Preferencias extends ExcelReader {
 				break;
 			}
 
+			tempCell.setCellType(Cell.CELL_TYPE_NUMERIC);
 			Double prioridade = tempCell.getNumericCellValue();
 			int p = prioridade.intValue();
 			Preferencia pref = new Preferencia(cursos.get(tempCell.getColumnIndex() - 1), sala, p);
@@ -45,16 +52,19 @@ public class Preferencias extends ExcelReader {
 	@Override
 	protected void readHeader(Row row) {
 
+		int count = 0;
 		boolean skip = true;
 		for (Cell tempCell : row) {
-
+			count++;
 			if (skip == true) {
 				skip = false;
 				continue;
 			}
-			String curso = tempCell.getStringCellValue();
+			tempCell.setCellType(Cell.CELL_TYPE_STRING);
+			String curso = tempCell.getStringCellValue().trim();
 			cursos.add(curso);
 		}
+		nCols = count;
 	}
 
 	@Override

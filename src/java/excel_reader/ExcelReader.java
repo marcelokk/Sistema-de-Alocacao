@@ -8,10 +8,11 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /**
- * Classe abstrata para o leitor do excel, essa classe declara as funcoes base
- * e as subclasses implementam a parte especifica de cada tabela do excel
+ * Classe abstrata para o leitor do excel, essa classe declara as funcoes base e
+ * as subclasses implementam a parte especifica de cada tabela do excel
+ *
  * @author Marcelo
- * 
+ *
  */
 public abstract class ExcelReader {
 
@@ -24,83 +25,105 @@ public abstract class ExcelReader {
 	 * path para o arquivo
 	 */
 	protected String path;
-	
+
 	/**
 	 * numero da aba que a tabela esta
 	 */
 	protected int sheet;
 
+	protected int nCols;
+
 	/**
 	 * Construtor, arruma o path se for windows ou linux
+	 *
 	 * @param nome
-	 * @param sheet 
+	 * @param sheet
 	 */
-    public ExcelReader(String nome, int sheet) {
-        if (SystemUtils.IS_OS_LINUX) {
-            path = "";
-        } else {
-            path = "";
-        }
-        this.nome = nome;
+	public ExcelReader(String nome, int sheet) {
+		if (SystemUtils.IS_OS_LINUX) {
+			path = "";
+		} else {
+			path = "";
+		}
+		this.nome = nome;
 		this.sheet = sheet;
-    }
+	}
 
 	/**
 	 * Funcao de leitura do arquivo excel
-	 * @param debug 
+	 *
+	 * @param debug
 	 */
-    public void read(boolean debug) {
-        try {
-            XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(path + nome));	// abre o arquivo excel
-            XSSFSheet sheet = workbook.getSheetAt(this.sheet);							// na aba da tabela
+	public void read(boolean debug) {
+		try {
+			XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(path + nome));	// abre o arquivo excel
+			XSSFSheet sheet = workbook.getSheetAt(this.sheet);							// na aba da tabela
 
-            boolean isHeader = true;	// comeca sempre pelo header
-            for (Row tempRow : sheet) {	// para cada linha na tabela,
+			boolean isHeader = true;	// comeca sempre pelo header
+			boolean isNull = false;
 
-                if (tempRow == null) {	// se nao tem nada, pula
-                    break;
-                }
+			for (Row tempRow : sheet) {	// para cada linha na tabela,
 
-				// checa se a linha esta em branco
-                short c;
-                for (c = tempRow.getFirstCellNum(); c <= tempRow.getLastCellNum(); c++) {
-                    if (tempRow.getCell(c) == null || tempRow.getCell(c).getCellType() == HSSFCell.CELL_TYPE_BLANK) {
-                        break;
-                    }
-                }
-				
-                if (isHeader) {	// se for o header, pula
-                    this.readHeader(tempRow);
-                    isHeader = false;
-                    continue;
-                }	// senao, e' uma linha valida e deve ser lida de acordo com o tipo da tabela
-                this.readColumns(tempRow);
-            }
-        } catch (Exception e) {
-            System.out.println("exception: " + e.getMessage());
-            e.printStackTrace();
-        }
-        if(debug) {
-            this.print();
-        }
-    }
+				if (tempRow == null) {	// se nao tem nada, pula
+					break;
+				}
+
+				if (tempRow.getCell(0) == null || tempRow.getCell(0).getCellType() == HSSFCell.CELL_TYPE_BLANK) {
+					System.err.println("Linha em branco: " + tempRow.getRowNum());
+					break;
+				}
+
+				if (isHeader) {	// se for o header, pula
+					this.readHeader(tempRow);
+					isHeader = false;
+					continue;
+				}	// senao, e' uma linha valida e deve ser lida de acordo com o tipo da tabela
+
+				this.readColumns(tempRow);
+			}
+		} catch (Exception e) {
+			System.out.println("exception: " + e.getMessage());
+			e.printStackTrace();
+		}
+		if (debug) {
+			this.print();
+		}
+	}
 
 	/**
 	 * leitura do header, depede da tabela
-	 * @param row 
+	 *
+	 * @param row
 	 */
-    protected void readHeader(Row row) {
-    }
+	protected void readHeader(Row row) {
+	}
 
 	/**
 	 * leitura das colunas, depende da tabela
-	 * @param row 
+	 *
+	 * @param row
 	 */
-    protected abstract void readColumns(Row row);
+	protected abstract void readColumns(Row row);
 
 	/**
 	 * printa o conteudo lido
 	 */
-    protected void print() {
-    }
+	protected void print() {
+	}
+
+	/**
+	 * Checa uma linha do excel
+	 * @param row
+	 * @return true se a linha esta OK, false caso contrario
+	 */
+	protected boolean checkExcel(Row row) {
+		// checa se a linha esta em branco
+		int c;
+		for (c = row.getFirstCellNum(); c < nCols; c++) {
+			if (row.getCell(c) == null || row.getCell(c).getCellType() == HSSFCell.CELL_TYPE_BLANK) {
+				return false;
+			}
+		}
+		return true;
+	}
 }

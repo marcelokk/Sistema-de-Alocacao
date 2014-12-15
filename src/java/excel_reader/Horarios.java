@@ -14,10 +14,16 @@ public class Horarios extends ExcelReader {
 	public Horarios(String nome) {
 		super(nome, 2);
 		horarios = new ArrayList();
+		nCols = 1;
 	}
 
 	@Override
 	protected void readColumns(Row row) {
+		if(!checkExcel(row)){
+			System.err.println("Horario, linhas " + row.getRowNum() + " e' null");
+			return;
+		}		
+		
 		Cell tempCell = row.getCell(0);
 		if (row.getCell(0).getDateCellValue() == null) {
 			return;
@@ -28,12 +34,14 @@ public class Horarios extends ExcelReader {
 		tempCell.setCellType(Cell.CELL_TYPE_NUMERIC);
 		Date inicio = tempCell.getDateCellValue();
 
+		/*
 		// fim
 		tempCell = row.getCell(1);
 		tempCell.setCellType(Cell.CELL_TYPE_NUMERIC);
 		Date fim = tempCell.getDateCellValue();
 		System.out.println("horas " + inicio.toString());
-
+		*/
+		
 		//System.out.println("horas " + inicio.toString() + " minutos " + fim.toString());
 		// tira espacos
 		//inicio = inicio.replace(" \t", "");
@@ -43,18 +51,20 @@ public class Horarios extends ExcelReader {
 		Integer aux = Integer.parseInt(tempo[0]) * 60;
 		aux += Integer.parseInt(tempo[1]);
 
+		/*
 		tempo = fim.toString().split(" ");
 		tempo = tempo[3].split(":");
 		Integer aux2 = Integer.parseInt(tempo[0]) * 60;
 		aux2 += Integer.parseInt(tempo[1]);
-
+		*/
+		
 		// aula termina antes de comecar
 		//if (aux > aux2) {
 		//    System.out.println("ERRO: ");
 		//}
 		Horario h = new Horario();
 		h.setInicio(aux);
-		h.setFim(aux2);
+		//h.setFim(aux2);
 		h.setDia(0);
 		horarios.add(h);
 		/*

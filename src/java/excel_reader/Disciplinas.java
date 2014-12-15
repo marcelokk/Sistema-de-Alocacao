@@ -12,20 +12,26 @@ public class Disciplinas extends ExcelReader {
 	public Disciplinas(String nome) {
 		super(nome, 1);
 		disciplinas = new ArrayList();
+		nCols = 3;
 	}
 
 	@Override
 	protected void readColumns(Row row) {
+		if(!checkExcel(row)){
+			System.err.println("Disciplina, linhas " + row.getRowNum() + " e' null");
+			return;
+		}		
+		
 		//  ****** disciplinas ******
 		// sigla da disciplina
 		Cell tempCell = row.getCell(0);
 		tempCell.setCellType(Cell.CELL_TYPE_STRING);
-		String sigla = tempCell.getStringCellValue();
+		String sigla = tempCell.getStringCellValue().trim();
 
 		// nome da discipina
 		tempCell = row.getCell(1);
 		tempCell.setCellType(Cell.CELL_TYPE_STRING);		
-		String disciplina = tempCell.getStringCellValue();
+		String disciplina = tempCell.getStringCellValue().trim();
 
 		// creditos
 		tempCell = row.getCell(2);

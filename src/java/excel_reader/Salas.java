@@ -18,28 +18,38 @@ public class Salas extends ExcelReader {
 		salas = new ArrayList();
 		andares = new ArrayList();
 		blocos = new ArrayList();
+		nCols = 5;
 	}
 
 	@Override
 	protected void readColumns(Row row) {
+		if(!checkExcel(row)){
+			System.err.println("Salas, linhas " + row.getRowNum() + " e' null");
+			return;
+		}		
+		
 		// ****** Sala ******
 		// nome da sala
 		Cell tempCell = row.getCell(0);
-		String sala = tempCell.getStringCellValue();
+		tempCell.setCellType(Cell.CELL_TYPE_STRING);		
+		String sala = tempCell.getStringCellValue().trim();
 
 		// capacidade
 		tempCell = row.getCell(1);
+		tempCell.setCellType(Cell.CELL_TYPE_NUMERIC);		
 		Double valor = tempCell.getNumericCellValue();
 		Integer capacidade = valor.intValue();
 
 		// pref vazia
 		tempCell = row.getCell(2);
+		tempCell.setCellType(Cell.CELL_TYPE_NUMERIC);		
 		valor = tempCell.getNumericCellValue();
 		Integer vazia = valor.intValue();
 
 		// bloco
 		tempCell = row.getCell(3);
-		String bloco = tempCell.getStringCellValue();
+		tempCell.setCellType(Cell.CELL_TYPE_STRING);		
+		String bloco = tempCell.getStringCellValue().trim();
 
 		int blocoID = -1;
 		
@@ -61,6 +71,7 @@ public class Salas extends ExcelReader {
 		
 		// andar
 		tempCell = row.getCell(4);
+		tempCell.setCellType(Cell.CELL_TYPE_NUMERIC);		
 		valor = tempCell.getNumericCellValue();
 		Integer andar = valor.intValue();
 		
