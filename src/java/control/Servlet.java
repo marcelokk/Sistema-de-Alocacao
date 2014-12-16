@@ -10,6 +10,7 @@ import excel_reader.Preferencias;
 import excel_reader.Recursos;
 import excel_reader.Salas;
 import excel_reader.Turmas;
+import excel_writer.ExcelWriter;
 import heuristica.HeuristicaInterface;
 import java.io.File;
 import java.io.IOException;
@@ -223,6 +224,10 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 				request.setAttribute("message", "Sorry this Servlet only handles file upload request");
 				System.out.println("Nao e' multipart content");
 			}
+		} else if(acao.equals("gerar")) {
+			ExcelWriter writer = new ExcelWriter();
+			writer.write();
+			url = "home.jsp";			
 		} else if (acao.equals("teste")) {
 			System.out.println("Este teste deu certo");
 		}

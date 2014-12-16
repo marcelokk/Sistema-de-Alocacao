@@ -116,29 +116,11 @@
 						<td>${s}</td>
 					</c:forEach>				
 				</tr>			
-
-				<%--
-				<tr>
-					<th>Horario</th>
-					<th>Segunda</th>
-					<th>Terca</th>
-					<th>Quarta</th>
-					<th>Quinta</th>
-					<th>Sexta</th>
-					<th>Sabado</th>
-					<th>Domingo</th>                
-				</tr>
-
-            <c:forEach items="${horarios}" var="h" varStatus="i">
-                <tr>
-                    <td>${h}</td>
-                    <c:forEach items="${horario_sala}" begin="${6*i.index}" end="${6*(i.index+1)}" var="s">
-                        <td>${s}</td>
-                    </c:forEach>
-                </tr>
-            </c:forEach>    
-				--%>
 			</table>
+			
+			<form action="Servlet?acao=gerar" method="POST">
+				<input type="submit" value="Gerar Excel">
+			</form>
 		</c:if>		
     </center>    
 </body>
