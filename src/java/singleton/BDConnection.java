@@ -1,6 +1,9 @@
 package singleton;
 
 import java.sql.*;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.sql.DataSource;
 
 /**
  * Class que faz a conexao com o banco de dados
@@ -27,6 +30,16 @@ public class BDConnection {
 	 * Conecta-se ao banco
 	 */
     public void conectar() {
+		/*
+		try{
+			Context ctx = new InitialContext();
+			DataSource ds = (DataSource) ctx.lookup("java:comp/env/jdbc/banco");
+			Connection con = ds.getConnection();
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		*/
+		//*
         try {
             Class.forName("org.sqlite.JDBC");
             con = DriverManager.getConnection(url, usuario, senha);
@@ -37,6 +50,7 @@ public class BDConnection {
         } catch (ClassNotFoundException e) {
             e.getMessage();
         }
+		//*/
     }
 
 	/**

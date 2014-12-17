@@ -59,6 +59,7 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 			if (acao.equals("login")) {
 				atualiza_lista();
 				atualiza_tabela("", 0);
+				session.setAttribute("mensagem", "");	// mensagem para login errado
 				url = "login.jsp";
 			}
 			// usuario clica em logout na home
@@ -68,6 +69,7 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 			}
 			// usuario clica no link da pagina de upload do excel
 			else if (acao.equals("uploadExcel")) {
+				session.setAttribute("mensagem_excel", "");
 				url = "uploadExcel.jsp";
 			}
 		}
@@ -100,6 +102,7 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 				session.setAttribute("currentUser", u);
 				url = "home.jsp";
 			} else {
+				session.setAttribute("mensagem", "Login ou Senha invalidos");	// erro do login
 				url = "login.jsp";
 			}
 		} // usuario clica no botao de cadastro na pagina de login 
@@ -138,7 +141,9 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 			url = "home.jsp";
 		} // usuario clica no botao de upload 
 		else if (acao.equals("upload_excel")) {
-			System.err.println("Upload");
+			
+			String mensagem = "";
+			
 			url = "uploadExcel.jsp";
 			String path = UPLOAD_DIRECTORY + File.separator;
 
@@ -156,52 +161,62 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 							System.err.println("Nome " + name + " path " + path + name);
 						}
 					}
-					request.setAttribute("message", "File Uploaded Successfully");
-
+					
+					mensagem = "Upload OK";
+					
 					try {
 						Banco.getInstance().reset();
-
+						mensagem = mensagem.concat("\nReset do Banco OK");
+						
 						System.err.println("CursoAno " + listaNomes.get(0));
 						cursos = new CursosAno(path + listaNomes.get(0));
 						cursos.read(false);
 						Banco.getInstance().cursoAno(cursos.getCursos());
-
+						mensagem = mensagem.concat("\nCursos OK");
+						
 						System.err.println("Salas");
 						salas = new Salas(path + listaNomes.get(0));
 						salas.read(false);
 						Banco.getInstance().bloco(salas.getBlocos());
 						Banco.getInstance().andar(salas.getAndar());
 						Banco.getInstance().sala(salas.getSalas());
-
+						mensagem = mensagem.concat("\nSalas OK");
+						
 						System.err.println("Disciplinas");
 						disciplinas = new Disciplinas(path + listaNomes.get(0));
 						disciplinas.read(false);
 						Banco.getInstance().disciplina(disciplinas.getDisciplinas());
-
+						mensagem = mensagem.concat("\nDisciplinas OK");
+						
 						System.err.println("Recursos");
 						recursos = new Recursos(path + listaNomes.get(0));
 						recursos.read(false);
 						Banco.getInstance().recurso(recursos.getRecursos());
 						Banco.getInstance().recursoHasSala(recursos.getRecursoHasSala());
-
+						mensagem = mensagem.concat("\nRecursos OK");
+						
 						System.err.println("Turmas");
 						turmas = new Turmas(path + listaNomes.get(0));
 						turmas.read(false);
 						Banco.getInstance().turma(turmas.getTurmas());
-
+						mensagem = mensagem.concat("\nTurmas OK");
+						
 						System.err.println("Preferencias");
 						preferencias = new Preferencias(path + listaNomes.get(0));
 						preferencias.read(false);
 						Banco.getInstance().preferencia(preferencias.getPreferencias());
-
+						mensagem = mensagem.concat("\nPreferencias OK");
+						
 						System.err.println("Horarios");
 						horarios = new Horarios(path + listaNomes.get(0));
 						horarios.read(false);
 						Banco.getInstance().horario(horarios.getHorarios());
-
+						mensagem = mensagem.concat("\nHorarios OK");
+						
 						System.err.println("Horario Turma");
 						Banco.getInstance().horario_turma(turmas.getTurmas());
-
+						mensagem = mensagem.concat("\nHorarios das Turmas OK");
+						
 						HeuristicaInterface heuristica = new HeuristicaInterface(path);
 						heuristica.geraInput("input.txt");
 
@@ -220,6 +235,7 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 					request.setAttribute("message", "File Upload Failed due to " + ex);
 					System.out.println("File Upload Failed due to " + ex);
 				}
+				session.setAttribute("mensagem_excel", mensagem);
 			} else {
 				request.setAttribute("message", "Sorry this Servlet only handles file upload request");
 				System.out.println("Nao e' multipart content");
@@ -320,6 +336,7 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 				listaHorarios.add(inicio);				
 			}
 
+			// cada horario tem em um dia da semana
 			for (int i = 0; i < listaHorarios.size() * 7; i++) {
 				lista.add(" ");
 			}
@@ -328,14 +345,14 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 				case 0:
 					while (result.next()) {
 						Integer i = result.getInt(1);
-						String tmp = result.getString(2) + "\n" + result.getString(3);
+						String tmp = result.getString(2) + "\n" + result.getString(3); // codigo do curso e codigo da disciplina
 						lista.set(i, tmp);
 					}
 					break;
 				case 1:
 					while (result.next()) {
-						Integer i = result.getInt(1);
-						String tmp = result.getString(4) + "\n" + result.getString(3);
+						Integer i = result.getInt(1);	// id do horario
+						String tmp = result.getString(4) + "\n" + result.getString(3);	// nome da sala e codigo da disciplina
 						lista.set(i, tmp);
 					}
 					break;
@@ -350,15 +367,24 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 		int i = 0;
 		int j = 0;
 		for (String a : lista) {
-			if (i == 7) {
+			if (i == 15) {
 				System.out.println();
 				i = 0;
 			}
-			System.out.print(j + " " + a + " ");
+			System.out.print(j + " " + a.replace("\n", "") + " ");
 			i++;
 			j++;
 		}
 
+		ArrayList<String> dias = new ArrayList();
+		dias.add("segunda");
+		dias.add("terca");
+		dias.add("quarta");
+		dias.add("quinta");
+		dias.add("sexta");
+		dias.add("sabado");
+		
+		session.setAttribute("dias", dias);
 		session.setAttribute("horarios_size", listaHorarios.size());
 		session.setAttribute("titulo_busca", titulo);
 		session.setAttribute("currentSala", sala);

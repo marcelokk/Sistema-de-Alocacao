@@ -6,6 +6,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import javax.activation.DataSource;
+import javax.naming.Context;
+import javax.naming.InitialContext;
 import model.Andar;
 import model.Bloco;
 import model.CursoAno;
@@ -34,6 +37,7 @@ public class Banco extends BDConnection {
 	// O path esta na pasta bin do apache
 	private Banco() {
 		super("jdbc:sqlite:C:\\Users\\Marcelo\\Desktop\\Sistema\\banco.db", "", "");
+
 		this.conectar();
 		try {
 			con.prepareStatement("pragma foreign_keys = ON;").execute();
@@ -98,7 +102,7 @@ public class Banco extends BDConnection {
 			pstm.addBatch();
 		}
 		pstm.executeBatch();
-		con.commit();		
+		con.commit();
 	}
 
 	/**
@@ -120,7 +124,7 @@ public class Banco extends BDConnection {
 			pstm.addBatch();
 		}
 		pstm.executeBatch();
-		con.commit();		
+		con.commit();
 	}
 
 	/**
@@ -142,7 +146,7 @@ public class Banco extends BDConnection {
 			pstm.addBatch();
 		}
 		pstm.executeBatch();
-		con.commit();		
+		con.commit();
 	}
 
 	/**
@@ -164,7 +168,7 @@ public class Banco extends BDConnection {
 		}
 
 		pstm.executeBatch();
-		con.commit();		
+		con.commit();
 	}
 
 	/**
@@ -185,7 +189,7 @@ public class Banco extends BDConnection {
 			pstm.addBatch();
 		}
 		pstm.executeBatch();
-		con.commit();		
+		con.commit();
 	}
 
 	/**
@@ -207,7 +211,7 @@ public class Banco extends BDConnection {
 			pstm.addBatch();
 		}
 		pstm.executeBatch();
-		con.commit();		
+		con.commit();
 	}
 
 	/**
@@ -230,7 +234,7 @@ public class Banco extends BDConnection {
 			pstm.addBatch();
 		}
 		pstm.executeBatch();
-		con.commit();		
+		con.commit();
 	}
 
 	/**
@@ -255,7 +259,7 @@ public class Banco extends BDConnection {
 		pstm.setInt(5, 0);
 
 		pstm.executeUpdate();
-		con.commit();		
+		con.commit();
 	}
 
 	/**
@@ -276,7 +280,7 @@ public class Banco extends BDConnection {
 		pstm.setString(4, u.getSenha());
 
 		pstm.executeUpdate();
-		con.commit();		
+		con.commit();
 	}
 
 	/**
@@ -294,7 +298,7 @@ public class Banco extends BDConnection {
 		pstm.setString(4, u.getEmail());
 
 		pstm.executeUpdate();
-		con.commit();		
+		con.commit();
 	}
 
 	/**
@@ -320,9 +324,9 @@ public class Banco extends BDConnection {
 			for (Horario h : t.getHorarios()) {
 				for (Horario h2 : listaHorarios) {
 					/*
-					System.out.println("hora " + h.getDia() + " (" + h.getInicio() / 60 + ":" + h.getInicio() % 60 + ")" + h2.getDia() + "("
-							+ h2.getInicio() / 60 + ":" + h2.getInicio() % 60 + ")");
-					*/
+					 System.out.println("hora " + h.getDia() + " (" + h.getInicio() / 60 + ":" + h.getInicio() % 60 + ")" + h2.getDia() + "("
+					 + h2.getInicio() / 60 + ":" + h2.getInicio() % 60 + ")");
+					 */
 					if (h.getDia() == h2.getDia() && h.getInicio() - h2.getInicio() == 0) {
 						//System.err.println("id hora " + h2.getId() + " codigo turma " + t.getId());
 						PreparedStatement pstm = con.prepareStatement(sql);
@@ -375,7 +379,7 @@ public class Banco extends BDConnection {
 			//pstm.execute();
 			pstm.executeUpdate();
 		}
-		con.commit();		
+		con.commit();
 	}
 
 	/**
@@ -414,7 +418,7 @@ public class Banco extends BDConnection {
 			//pstm.execute();
 			pstm.executeUpdate();
 		}
-		con.commit();		
+		con.commit();
 	}
 
 	/**
@@ -428,6 +432,7 @@ public class Banco extends BDConnection {
 	public ResultSet query(String query) throws SQLException {
 		Statement pstt = con.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		ResultSet result = pstt.executeQuery(query);
+		con.commit();
 		return result;
 	}
 
@@ -449,6 +454,7 @@ public class Banco extends BDConnection {
 				h.setTurma(result.getInt(3));
 				lista.add(h);
 			}
+			con.commit();
 		} catch (Exception e) {
 		} finally {
 			return lista;
@@ -474,6 +480,7 @@ public class Banco extends BDConnection {
 				u.setNome(result.getString(2));
 				u.setEmail(result.getString(3));
 				u.setSenha(result.getString(4));
+				con.commit();
 				return u;
 			} else {
 				return null;
@@ -503,8 +510,7 @@ public class Banco extends BDConnection {
 			"delete from CursoAno;",
 			"delete from Disciplina;",
 			"delete from Tipo_reserva;",
-			"delete from Horario;",
-		};
+			"delete from Horario;",};
 
 		try {
 			for (String s : drops) {
@@ -512,6 +518,7 @@ public class Banco extends BDConnection {
 				PreparedStatement pstm = con.prepareStatement(s);
 				pstm.executeUpdate();
 			}
+			con.commit();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -554,10 +561,10 @@ public class Banco extends BDConnection {
 					return 0;
 				}
 			}
+			con.commit();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 		// se nao achou, tenta sala
 		return 0;
 	}

@@ -10,6 +10,7 @@
 		
 </head>
 <body>
+    <jsp:useBean id="mensagem" type="String" scope="session"/>
 
     <center>
         <h1>Sistema de Alocacao</h1>        
@@ -30,6 +31,8 @@
         </form>
             
         <p>Ainda nao e' cadastrado? Entao cadastre-se em <a href="cadastro.jsp">Cadastro</a></p>
+		
+		<p>${mensagem}</p>
     </center>
 </body>
 </html>

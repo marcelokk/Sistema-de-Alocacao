@@ -29,7 +29,7 @@
 				Y.one('#ac-input').plug(Y.Plugin.AutoComplete, {
 					resultFilters: 'startsWith',
 					resultHighlighter: 'startsWith',
-					source: Salas					
+					source: Salas
 				});
 			});
         </script>
@@ -42,6 +42,7 @@
         <jsp:useBean id="salas" type="String" scope="session"/>
         <jsp:useBean id="horarios" type="java.util.List" scope="session"/>
 		<jsp:useBean id="titulo_busca" type="String" scope="session"/>
+		<jsp:useBean id="dias" type="java.util.List" scope="session"/>
 
     <center>
         <h1>Ola, ${currentUser.nome}</h1>
@@ -66,7 +67,7 @@
 			</div>
 
 			<h3>${titulo_busca} ${currentSala}</h3>
-
+			<%--
 			<table border="1px">
 				<tr>
 					<th></th>
@@ -117,7 +118,25 @@
 					</c:forEach>				
 				</tr>			
 			</table>
-			
+			--%>
+			<table border="1px">
+				<tr>
+					<th></th>
+					<c:forEach items="${horarios}" var="h" varStatus="i">
+						<th>${h}</th>
+					</c:forEach> 							
+				</tr>
+
+				<c:forEach items="${dias}" var="d" varStatus="i">
+					<tr>
+						<td>${d}</td>
+						<c:forEach items="${horario_sala}" begin="${horarios_size * i.index}" end="${horarios_size * (i.index + 1) -1}" var="s">
+							<td>${s}</td>
+						</c:forEach>
+					</tr>
+				</c:forEach>
+			</table>
+
 			<form action="Servlet?acao=gerar" method="POST">
 				<input type="submit" value="Gerar Excel">
 			</form>

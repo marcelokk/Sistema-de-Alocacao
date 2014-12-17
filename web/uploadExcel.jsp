@@ -38,16 +38,18 @@
 
     </head>
     <body>
-
+    <jsp:useBean id="mensagem_excel" type="String" scope="session"/>
+		
     <center>
         <h2>Upload das Tabelas do Excel</h2>
 
         <form method="POST" action="Servlet?acao=upload_excel" enctype="multipart/form-data">
-			<input type="file" name="excel" value="${horario}" onchange="func_search();">
+			<input type="file" name="excel" onchange="func_search();" required="true">
             <input type="submit" value="upload" onclick="proximo()">
         </form>                    
 		<img id="carregando" src="C:\Users\Marcelo\Desktop\Sistema\ajax-loader.gif" alt="Gif de Carregamento" style="visibility:hidden">
         <a href="home.jsp">Voltar</a>
+		<p>${mensagem_excel}</p>
     </center>
 </body>
 </html>

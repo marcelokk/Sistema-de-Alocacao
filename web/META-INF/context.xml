@@ -1,2 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Context antiJARLocking="true" path="/Sistema"/>
+
+<Context antiJARLocking="true" path="/Sistema">
+<Resource name="jdbc/banco" 
+		  auth="Container" 
+		  type="javax.sql.DataSource"
+		  driverClassName="org.sqlite.JDBC"		  
+		  maxActive="100" 
+		  maxIdle="30" 
+		  maxWait="10000"
+		  username="" 
+		  password="" 
+		  url="jdbc:sqlite:/${catalina.home}/dbs/banco.db"
+		  factory="org.apache.tomcat.dbcp.dbcp.BasicDataSourceFactory">
+</Resource>
+</Context>
