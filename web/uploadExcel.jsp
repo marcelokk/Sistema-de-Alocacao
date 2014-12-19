@@ -38,8 +38,8 @@
 
     </head>
     <body>
-    <jsp:useBean id="mensagem_excel" type="String" scope="session"/>
-		
+		<jsp:useBean id="mensagem_excel" type="java.util.List" scope="session"/>
+
     <center>
         <h2>Upload das Tabelas do Excel</h2>
 
@@ -49,7 +49,10 @@
         </form>                    
 		<img id="carregando" src="C:\Users\Marcelo\Desktop\Sistema\ajax-loader.gif" alt="Gif de Carregamento" style="visibility:hidden">
         <a href="home.jsp">Voltar</a>
-		<p>${mensagem_excel}</p>
+
+		<c:forEach items="${mensagem_excel}" var="m">
+			<p>${m}</p>
+		</c:forEach> 			
     </center>
 </body>
 </html>

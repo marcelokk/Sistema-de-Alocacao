@@ -102,14 +102,17 @@ create table Horario(
     inicio integer,
     --fim integer,
     diasem integer,
+    unique(id, inicio),
     PRIMARY KEY(id)
 );
 
+-- codigo do curso e da disciplina devem ser unicos
 create table Turma(
     codigo integer,
     codigo_curso varchar,
     codigo_disciplina varchar,
     numero_alunos smallint,
+    unique(codigo_curso, codigo_disciplina),
     PRIMARY KEY(codigo),
     FOREIGN KEY(codigo_curso) REFERENCES CursoAno(codigo),
     FOREIGN KEY(codigo_disciplina) REFERENCES Disciplina(codigo)

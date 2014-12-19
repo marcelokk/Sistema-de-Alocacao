@@ -6,9 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import javax.activation.DataSource;
-import javax.naming.Context;
-import javax.naming.InitialContext;
+import java.util.Iterator;
 import model.Andar;
 import model.Bloco;
 import model.CursoAno;
@@ -66,20 +64,31 @@ public class Banco extends BDConnection {
 	 * @throws SQLException
 	 */
 	// nao precisa fazer checagem
-	public void cursoAno(ArrayList<CursoAno> lista) throws SQLException {
+	public String cursoAno(ArrayList<CursoAno> lista) throws SQLException {
 		String sql = ("INSERT INTO CursoAno VALUES(?,?,?);");
 		PreparedStatement pstm = con.prepareStatement(sql);
 
-		for (CursoAno c : lista) {
-			//System.err.println(c.getCodigo() + " " + c.getNome() + " " + c.getPeriodo());
-			pstm.setString(1, c.getCodigo());
-			pstm.setString(2, c.getNome());
-			pstm.setInt(3, c.getPeriodo());
+		CursoAno c = null;
 
-			pstm.addBatch();
+		int linha = 1;
+		try {
+			Iterator it = lista.iterator();
+			while (it.hasNext()) {
+				c = (CursoAno) it.next();
+				pstm.setString(1, c.getCodigo());
+				pstm.setString(2, c.getNome());
+				pstm.setInt(3, c.getPeriodo());
+				linha++;
+				//pstm.addBatch();
+				pstm.executeUpdate();
+			}
+		} catch (SQLException e) {
+			return "ERRO - na tabela Curso, linha: " + linha + " - Codigo do curso ja existente " + c.getCodigo();
 		}
-		pstm.executeBatch();
+
+		//pstm.executeBatch();
 		con.commit();
+		return "";
 	}
 
 	/**
@@ -89,20 +98,31 @@ public class Banco extends BDConnection {
 	 * @throws SQLException
 	 */
 	// nao precisa fazer checagem
-	public void disciplina(ArrayList<Disciplina> lista) throws SQLException {
+	public String disciplina(ArrayList<Disciplina> lista) throws SQLException {
 		String sql = ("INSERT INTO Disciplina VALUES(?,?,?);");
 		PreparedStatement pstm = con.prepareStatement(sql);
 
-		for (Disciplina d : lista) {
+		Disciplina d = null;
+		Iterator it = lista.iterator();
 
-			pstm.setString(1, d.getCodigo());
-			pstm.setString(2, d.getNome());
-			pstm.setInt(3, d.getCreditos());
-
-			pstm.addBatch();
+		int linha = 1;
+		try {
+			while (it.hasNext()) {
+				d = (Disciplina) it.next();
+				pstm.setString(1, d.getCodigo());
+				pstm.setString(2, d.getNome());
+				pstm.setInt(3, d.getCreditos());
+				linha++;
+				pstm.executeUpdate();
+				//pstm.addBatch();
+			}
+		} catch (SQLException e) {
+			return "ERRO - na tabela Disciplina, linha: " + linha + " - Codigo da disciplina ja existente " + d.getCodigo();
 		}
-		pstm.executeBatch();
+
+		//pstm.executeBatch();
 		con.commit();
+		return "";
 	}
 
 	/**
@@ -112,19 +132,31 @@ public class Banco extends BDConnection {
 	 * @throws SQLException
 	 */
 	// precisa checar o andar
-	public void sala(ArrayList<Sala> lista) throws SQLException {
+	public String sala(ArrayList<Sala> lista) throws SQLException {
 		String sql = ("INSERT INTO Sala VALUES(?,?,?);");
 		PreparedStatement pstm = con.prepareStatement(sql);
 
-		for (Sala s : lista) {
-			pstm.setInt(1, s.getAndar());
-			pstm.setString(2, s.getSala());
-			pstm.setInt(3, s.getCapacidade());
+		Sala s = null;
+		Iterator it = lista.iterator();
 
-			pstm.addBatch();
+		int linha = 1;
+		try {
+			while (it.hasNext()) {
+				s = (Sala) it.next();
+				pstm.setInt(1, s.getAndar());
+				pstm.setString(2, s.getSala());
+				pstm.setInt(3, s.getCapacidade());
+				linha++;
+				//pstm.addBatch();
+				pstm.executeUpdate();
+			}
+		} catch (SQLException e) {
+			return "ERRO - na tabela Sala, linha: " + linha + " - Nome da disciplina ja existente " + s.getSala();
 		}
-		pstm.executeBatch();
+
+		//pstm.executeBatch();
 		con.commit();
+		return "";
 	}
 
 	/**
@@ -199,19 +231,38 @@ public class Banco extends BDConnection {
 	 * @throws SQLException
 	 */
 	// precisa checar curso e disciplina
-	public void turma(ArrayList<Turma> lista) throws SQLException {
+	public String turma(ArrayList<Turma> lista) throws SQLException {
 		String sql = ("INSERT INTO Turma VALUES(?,?,?,?);");
 		PreparedStatement pstm = con.prepareStatement(sql);
 
-		for (Turma t : lista) {
-			pstm.setInt(1, t.getId());
-			pstm.setString(2, t.getCurso());
-			pstm.setString(3, t.getDisciplina());
-			pstm.setInt(4, t.getInscritos());
-			pstm.addBatch();
+		Turma t = null;
+		Iterator it = lista.iterator();
+
+		int linha = 1;
+		try {
+			while (it.hasNext()) {
+				t = (Turma) it.next();
+				pstm.setInt(1, t.getId());
+				pstm.setString(2, t.getCurso());
+				pstm.setString(3, t.getDisciplina());
+				pstm.setInt(4, t.getInscritos());
+				//pstm.addBatch();
+				linha++;
+				pstm.executeUpdate();
+			}
+		} catch (SQLException e) {
+			//System.err.println(e.toString());
+
+			if (e.toString().contains("(foreign key constraint failed)")) {
+				return "ERRO - na tabela Turma, linha: " + linha + " - Curso " + t.getCurso() + " ou Disciplina " + t.getDisciplina() + " nao existem";
+			} else if (e.toString().contains("not unique")) {
+				return "ERRO - na tabela Turma, linha: " + linha + " - Curso " + t.getCurso() + ", Disciplina " + t.getDisciplina() + " ja existem";
+			}
 		}
-		pstm.executeBatch();
+
+		//pstm.executeBatch();
 		con.commit();
+		return "";
 	}
 
 	/**
@@ -221,20 +272,43 @@ public class Banco extends BDConnection {
 	 * @throws SQLException
 	 */
 	// nao precisa fazer checagem
-	public void horario(ArrayList<Horario> lista) throws SQLException {
+	public String horario(ArrayList<Horario> lista) throws SQLException {
 		String sql = ("insert into horario values(?,?,?);");
 		PreparedStatement pstm = con.prepareStatement(sql);
 
-		for (Horario h : lista) {
-			pstm.setInt(1, h.getId());
-			pstm.setInt(2, h.getInicio());
-			//pstm.setInt(3, h.getFim());
-			pstm.setInt(3, h.getDia());
+		Horario h = null;
+		Iterator it = lista.iterator();
 
-			pstm.addBatch();
+		int linha = 1;
+		try {
+			while (it.hasNext()) {
+				h = (Horario) it.next();
+				pstm.setInt(1, h.getId());
+				pstm.setInt(2, h.getInicio());
+				//pstm.setInt(3, h.getFim());
+				pstm.setInt(3, h.getDia());
+				linha++;
+
+				pstm.executeUpdate();
+				//pstm.addBatch();
+			}
+		} catch (SQLException e) {
+			Integer tempo = h.getInicio();
+			Integer minutos = tempo % 60;
+			Integer hora = (tempo - minutos) / 60;
+			String inicio = null;
+			if (minutos == 0) {
+				inicio = hora.toString() + ":00";
+			} else {
+				inicio = hora.toString() + ":" + minutos.toString();
+			}
+			e.printStackTrace();
+			return "ERRO - na tabela Horario, linha: " + linha + " - Horario " + inicio + " ja existe";
 		}
-		pstm.executeBatch();
+
+		//pstm.executeBatch();
 		con.commit();
+		return "";
 	}
 
 	/**
@@ -500,8 +574,8 @@ public class Banco extends BDConnection {
 			"delete from Recurso_has_Sala;",
 			"delete from Recurso;",
 			"delete from Horario_Turma;",
-			"delete from Reserva;",
 			"delete from Turma;",
+			"delete from Reserva;",
 			"delete from Semestre;",
 			"delete from Preferencia;",
 			"delete from Sala;",
@@ -510,7 +584,8 @@ public class Banco extends BDConnection {
 			"delete from CursoAno;",
 			"delete from Disciplina;",
 			"delete from Tipo_reserva;",
-			"delete from Horario;",};
+			"delete from Horario;"
+		};
 
 		try {
 			for (String s : drops) {
@@ -525,17 +600,12 @@ public class Banco extends BDConnection {
 
 		// reseta os contadores de ID
 		Andar.reset();
-
 		Bloco.reset();
-
 		Recurso.reset();
-
 		Horario.reset();
-
 		Turma.reset();
 
-		System.err.println(
-				"Fim do Reset " + drops.length);
+		System.err.println("Fim do Reset " + drops.length);
 	}
 
 	/**

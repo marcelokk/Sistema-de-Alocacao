@@ -131,7 +131,7 @@
 					<tr>
 						<td>${d}</td>
 						<c:forEach items="${horario_sala}" begin="${horarios_size * i.index}" end="${horarios_size * (i.index + 1) -1}" var="s">
-							<td>${s}</td>
+							<td colspan="${s.tamanho}">${s.conteudo}</td>
 						</c:forEach>
 					</tr>
 				</c:forEach>

@@ -228,7 +228,7 @@ public class HeuristicaInterface {
                     int tmp = Integer.decode(quebra[j]);
 
                     if (tmp != -1) {
-                        System.out.println("inseriu: " + listaHorarios.get(i));
+                        //System.out.println("inseriu: " + listaHorarios.get(i));
                         Banco.getInstance().inserir(listaHorarios.get(i), listaSalas.get(j), listaTurmas.get(tmp));
                     }
                 }

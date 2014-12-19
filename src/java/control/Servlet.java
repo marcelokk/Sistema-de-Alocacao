@@ -53,7 +53,7 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 		url = "";
 
 		System.out.println("Working Directory = " + System.getProperty("user.dir"));
-		
+
 		if (acao != null) {
 			// pagina da home
 			if (acao.equals("login")) {
@@ -61,15 +61,13 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 				atualiza_tabela("", 0);
 				session.setAttribute("mensagem", "");	// mensagem para login errado
 				url = "login.jsp";
-			}
-			// usuario clica em logout na home
+			} // usuario clica em logout na home
 			else if (acao.equals("logout")) {
 				session.setAttribute("currentUser", null);
 				url = "login.jsp";
-			}
-			// usuario clica no link da pagina de upload do excel
+			} // usuario clica no link da pagina de upload do excel
 			else if (acao.equals("uploadExcel")) {
-				session.setAttribute("mensagem_excel", "");
+				session.setAttribute("mensagem_excel", new ArrayList());
 				url = "uploadExcel.jsp";
 			}
 		}
@@ -114,11 +112,11 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 			u.setSenha(request.getParameter("password"));
 			try {
 				Banco.getInstance().inserirUsuario(u);
-			} catch(SQLException e) {
+			} catch (SQLException e) {
 				e.printStackTrace();
 				// erro no cadastro do usuario
 			}
-			
+
 			url = "login.jsp";
 		} // usuario clica no link para edicao dos dados pessoais na home 
 		else if (acao.equals("editar_dados")) {
@@ -126,13 +124,13 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 			u.setNome(request.getParameter("nome"));
 			u.setNumero_usp(Integer.parseInt(request.getParameter("numerousp")));
 			u.setSenha(request.getParameter("password"));
-			
+
 			try {
 				Banco.getInstance().updateUsuario(u);
-			} catch(SQLException e) {
+			} catch (SQLException e) {
 				e.printStackTrace();
 			}
-			
+
 			url = "home.jsp";
 		} // usuario clica no botao buscar 
 		else if (acao.equals("search")) {
@@ -141,14 +139,16 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 			url = "home.jsp";
 		} // usuario clica no botao de upload 
 		else if (acao.equals("upload_excel")) {
-			
-			String mensagem = "";
-			
+
+			ArrayList<String> mensagem = new ArrayList();
+			String erro = "";
+
 			url = "uploadExcel.jsp";
 			String path = UPLOAD_DIRECTORY + File.separator;
 
 			ArrayList<String> listaNomes = new ArrayList();
 
+			erro = "ERRO - Upload";
 			if (ServletFileUpload.isMultipartContent(request)) {
 				try {
 					List<FileItem> multiparts = new ServletFileUpload(new DiskFileItemFactory()).parseRequest(request);
@@ -161,62 +161,72 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 							System.err.println("Nome " + name + " path " + path + name);
 						}
 					}
-					
-					mensagem = "Upload OK";
-					
+					mensagem.add("Upload OK");
+
 					try {
+						erro = "ERRO - Reset do Banco";
 						Banco.getInstance().reset();
-						mensagem = mensagem.concat("\nReset do Banco OK");
-						
-						System.err.println("CursoAno " + listaNomes.get(0));
+						mensagem.add("Reset do Banco OK");
+
 						cursos = new CursosAno(path + listaNomes.get(0));
 						cursos.read(false);
-						Banco.getInstance().cursoAno(cursos.getCursos());
-						mensagem = mensagem.concat("\nCursos OK");
-						
-						System.err.println("Salas");
+						erro = Banco.getInstance().cursoAno(cursos.getCursos());
+						if (!"".equals(erro)) {
+							throw new SQLException();
+						}
+						mensagem.add("Cursos OK");
+
 						salas = new Salas(path + listaNomes.get(0));
 						salas.read(false);
 						Banco.getInstance().bloco(salas.getBlocos());
 						Banco.getInstance().andar(salas.getAndar());
-						Banco.getInstance().sala(salas.getSalas());
-						mensagem = mensagem.concat("\nSalas OK");
-						
-						System.err.println("Disciplinas");
+						erro = Banco.getInstance().sala(salas.getSalas());
+						if (!"".equals(erro)) {
+							throw new SQLException();
+						}
+						mensagem.add("Salas OK");
+
 						disciplinas = new Disciplinas(path + listaNomes.get(0));
 						disciplinas.read(false);
-						Banco.getInstance().disciplina(disciplinas.getDisciplinas());
-						mensagem = mensagem.concat("\nDisciplinas OK");
-						
-						System.err.println("Recursos");
+						erro = Banco.getInstance().disciplina(disciplinas.getDisciplinas());
+						if (!"".equals(erro)) {
+							throw new SQLException();
+						}
+						mensagem.add("Disciplinas OK");
+
+						erro = "ERRO - Tabela Recursos";
 						recursos = new Recursos(path + listaNomes.get(0));
 						recursos.read(false);
 						Banco.getInstance().recurso(recursos.getRecursos());
 						Banco.getInstance().recursoHasSala(recursos.getRecursoHasSala());
-						mensagem = mensagem.concat("\nRecursos OK");
-						
-						System.err.println("Turmas");
+						mensagem.add("Recursos OK");
+
 						turmas = new Turmas(path + listaNomes.get(0));
 						turmas.read(false);
-						Banco.getInstance().turma(turmas.getTurmas());
-						mensagem = mensagem.concat("\nTurmas OK");
-						
-						System.err.println("Preferencias");
+						erro = Banco.getInstance().turma(turmas.getTurmas());
+						if (!"".equals(erro)) {
+							throw new SQLException();
+						}
+						mensagem.add("Turmas OK");
+
+						erro = "ERRO - Tabela Preferencias";
 						preferencias = new Preferencias(path + listaNomes.get(0));
 						preferencias.read(false);
 						Banco.getInstance().preferencia(preferencias.getPreferencias());
-						mensagem = mensagem.concat("\nPreferencias OK");
-						
-						System.err.println("Horarios");
+						mensagem.add("Preferencias OK");
+
 						horarios = new Horarios(path + listaNomes.get(0));
 						horarios.read(false);
-						Banco.getInstance().horario(horarios.getHorarios());
-						mensagem = mensagem.concat("\nHorarios OK");
-						
-						System.err.println("Horario Turma");
+						erro = Banco.getInstance().horario(horarios.getHorarios());
+						if (!"".equals(erro)) {
+							throw new SQLException();
+						}
+						mensagem.add("Horarios OK");
+
+						erro = "ERRO - Cruzamento dos dados entre Turmas e Horarios";
 						Banco.getInstance().horario_turma(turmas.getTurmas());
-						mensagem = mensagem.concat("\nHorarios das Turmas OK");
-						
+						mensagem.add("Horarios das Turmas OK");
+
 						HeuristicaInterface heuristica = new HeuristicaInterface(path);
 						heuristica.geraInput("input.txt");
 
@@ -228,27 +238,33 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 						atualiza_lista();
 						atualiza_tabela("", 0);
 						url = "home.jsp";
-					} catch (Exception e) {
+					} catch (SQLException e) {
+						mensagem.add(erro);
 						e.printStackTrace();
 					}
 				} catch (Exception ex) {
-					request.setAttribute("message", "File Upload Failed due to " + ex);
 					System.out.println("File Upload Failed due to " + ex);
 				}
+				session.removeAttribute("mensagem_excel");
 				session.setAttribute("mensagem_excel", mensagem);
+				for (String s : mensagem) {
+					System.err.println(s);
+				}
 			} else {
 				request.setAttribute("message", "Sorry this Servlet only handles file upload request");
 				System.out.println("Nao e' multipart content");
 			}
-		} else if(acao.equals("gerar")) {
+		} else if (acao.equals("gerar")) {
 			ExcelWriter writer = new ExcelWriter();
 			writer.write();
-			url = "home.jsp";			
-		} else if (acao.equals("teste")) {
+			url = "home.jsp";
+		} else if (acao.equals(
+				"teste")) {
 			System.out.println("Este teste deu certo");
 		}
 
 		RequestDispatcher dispatcher = request.getRequestDispatcher(url);
+
 		dispatcher.forward(request, response);
 	}
 
@@ -282,15 +298,17 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 
 	/**
 	 * atualiza a tabela da home, colocando na sessao o conteudo da tabela
+	 *
 	 * @param sala
-	 * @param tipo_busca 
+	 * @param tipo_busca
 	 */
 	private void atualiza_tabela(String sala, int tipo_busca) {
-		ArrayList<String> lista = new ArrayList();
+		ArrayList<Celula> lista = new ArrayList();
 		ArrayList<String> listaHorarios = new ArrayList();
 		String titulo = "Titulo";
 		String sql = "";
 
+		Celula c;
 		try {
 			ResultSet horarios = Banco.getInstance().query("select distinct inicio from horario");
 
@@ -318,60 +336,55 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 				} else {
 					inicio = hora.toString() + ":" + minutos.toString();
 				}
-
-				/*
-				tempo = horarios.getInt(2);
-				minutos = tempo % 60;
-				hora = (tempo - minutos) / 60;
-				String fim = null;
-
-				if (minutos == 0) {
-					fim = hora.toString() + ":00";
-				} else {
-					fim = hora.toString() + ":" + minutos.toString();
-				}
-				*/
-				//System.out.println("hora: " + hora + " minutos " + minutos + " resultado " + a);
-				//listaHorarios.add(inicio + " - " + fim);
-				listaHorarios.add(inicio);				
+				listaHorarios.add(inicio);
 			}
 
 			// cada horario tem em um dia da semana
 			for (int i = 0; i < listaHorarios.size() * 7; i++) {
-				lista.add(" ");
+				c = new Celula();
+				lista.add(c);
 			}
 
-			switch (tipo_busca) {
-				case 0:
-					while (result.next()) {
-						Integer i = result.getInt(1);
-						String tmp = result.getString(2) + "\n" + result.getString(3); // codigo do curso e codigo da disciplina
-						lista.set(i, tmp);
-					}
-					break;
-				case 1:
-					while (result.next()) {
-						Integer i = result.getInt(1);	// id do horario
-						String tmp = result.getString(4) + "\n" + result.getString(3);	// nome da sala e codigo da disciplina
-						lista.set(i, tmp);
-					}
-					break;
-				default:
-					break;
+			while (result.next()) {
+				Integer i = result.getInt(1);	// id do horario
+				String tmp = null;
+				
+				ResultSet creditos = Banco.getInstance().query("select d.numero_creditos from disciplina d where d.codigo = \'" + result.getString(3) + "\'");
+				creditos.next();
+				Integer ncreditos = creditos.getInt(1);
+				
+				switch (tipo_busca) {
+					case 0:
+						tmp = result.getString(2) + "\n" + result.getString(3); // codigo do curso e codigo da disciplina
+						break;
+
+					case 1:
+						tmp = result.getString(4) + "\n" + result.getString(3);	// nome da sala e codigo da disciplina
+						break;
+
+					default:
+						break;
+				}
+				if (i % listaHorarios.size() == 0 && i != 0) {
+					c = new Celula(tmp, ncreditos, 1);
+				} else {
+					c = new Celula(tmp, ncreditos, 0);
+				}
+				lista.set(i, c);
 			}
-		} catch (Exception e) {
+		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 
 		System.out.println("Lista");
 		int i = 0;
 		int j = 0;
-		for (String a : lista) {
+		for (Celula a : lista) {
 			if (i == 15) {
 				System.out.println();
 				i = 0;
 			}
-			System.out.print(j + " " + a.replace("\n", "") + " ");
+			System.out.print(j + " " + a.getConteudo().replace("\n", "") + " ");
 			i++;
 			j++;
 		}
@@ -383,7 +396,7 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 		dias.add("quinta");
 		dias.add("sexta");
 		dias.add("sabado");
-		
+
 		session.setAttribute("dias", dias);
 		session.setAttribute("horarios_size", listaHorarios.size());
 		session.setAttribute("titulo_busca", titulo);
@@ -391,7 +404,7 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 		session.setAttribute("horarios", listaHorarios);
 		session.setAttribute("horario_sala", lista);
 	}
-	
+
 	public void error(String message) {
 		System.out.println("Servlet recebeu o erro " + message);
 	}
