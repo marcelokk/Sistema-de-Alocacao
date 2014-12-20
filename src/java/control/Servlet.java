@@ -67,7 +67,7 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 				url = "login.jsp";
 			} // usuario clica no link da pagina de upload do excel
 			else if (acao.equals("uploadExcel")) {
-				session.setAttribute("mensagem_excel", new ArrayList());
+				session.setAttribute("mensagem_excel", "");
 				url = "uploadExcel.jsp";
 			}
 		}
@@ -245,8 +245,7 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 				} catch (Exception ex) {
 					System.out.println("File Upload Failed due to " + ex);
 				}
-				session.removeAttribute("mensagem_excel");
-				session.setAttribute("mensagem_excel", mensagem);
+				session.setAttribute("mensagem_excel", mensagem.get(mensagem.size() - 1));
 				for (String s : mensagem) {
 					System.err.println(s);
 				}
@@ -303,10 +302,18 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 	 * @param tipo_busca
 	 */
 	private void atualiza_tabela(String sala, int tipo_busca) {
-		ArrayList<Celula> lista = new ArrayList();
+		ArrayList<ArrayList> lista = new ArrayList();
 		ArrayList<String> listaHorarios = new ArrayList();
 		String titulo = "Titulo";
 		String sql = "";
+
+		String[] dias = {"segunda",
+			"terca",
+			"quarta",
+			"quinta",
+			"sexta",
+			"sabado"
+		};
 
 		Celula c;
 		try {
@@ -340,19 +347,39 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 			}
 
 			// cada horario tem em um dia da semana
-			for (int i = 0; i < listaHorarios.size() * 7; i++) {
-				c = new Celula();
-				lista.add(c);
+			for (int i = 0; i < dias.length; i++) {
+				ArrayList<Celula> dia = new ArrayList();
+				for (int j = 0; j < listaHorarios.size(); j++) {
+					dia.add(new Celula());
+				}
+				lista.add(dia);
 			}
 
 			while (result.next()) {
-				Integer i = result.getInt(1);	// id do horario
-				String tmp = null;
-				
+				Integer id = result.getInt(1);	// id do horario
+				String tmp = null;				// conteudo da celula
+
+				// recupera o numero de creditos da disciplina
 				ResultSet creditos = Banco.getInstance().query("select d.numero_creditos from disciplina d where d.codigo = \'" + result.getString(3) + "\'");
 				creditos.next();
 				Integer ncreditos = creditos.getInt(1);
-				
+
+				switch (ncreditos) {
+					case 2:
+					case 3:
+						//ncreditos = ncreditos;
+						break;
+					case 4:
+						ncreditos = 2;
+						break;
+					case 6:
+						ncreditos = 3;
+						break;
+					default:
+						ncreditos = 1;
+						break;
+				}
+
 				switch (tipo_busca) {
 					case 0:
 						tmp = result.getString(2) + "\n" + result.getString(3); // codigo do curso e codigo da disciplina
@@ -365,44 +392,54 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 					default:
 						break;
 				}
-				if (i % listaHorarios.size() == 0 && i != 0) {
-					c = new Celula(tmp, ncreditos, 1);
-				} else {
-					c = new Celula(tmp, ncreditos, 0);
-				}
-				lista.set(i, c);
+
+				int linha = id / listaHorarios.size(); // qual dia esta o horario
+				int coluna = id % listaHorarios.size(); // me diz qual coluna esta o horario
+
+				c = new Celula(tmp, ncreditos, false);
+				lista.get(linha).set(coluna, c);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 
-		System.out.println("Lista");
-		int i = 0;
-		int j = 0;
-		for (Celula a : lista) {
-			if (i == 15) {
-				System.out.println();
-				i = 0;
+		// acerta o tamanho de cada linha da tabela
+		for (ArrayList<Celula> a : lista) {
+			int tamanho = 0;
+			for (int i = 0; i < a.size(); i++) {
+				tamanho += a.get(i).getTamanho();
+				if (tamanho > listaHorarios.size()) {
+					for (int j = i; j < a.size(); ) {
+						a.remove(j);
+					}
+				}
 			}
-			System.out.print(j + " " + a.getConteudo().replace("\n", "") + " ");
-			i++;
-			j++;
 		}
 
-		ArrayList<String> dias = new ArrayList();
-		dias.add("segunda");
-		dias.add("terca");
-		dias.add("quarta");
-		dias.add("quinta");
-		dias.add("sexta");
-		dias.add("sabado");
+		int i = 0, j = 0;
+		System.out.println("Lista");
+		for (ArrayList<Celula> a : lista) {
+			for (Celula cell : a) {
+				System.out.print("[" + i + "," + j + "]" + cell.getConteudo().replace("\n", "") + " ");
+				j++;
+			}
+			System.out.println();
+			i++;
+		}
+
+		session.setAttribute("segunda", lista.get(0));
+		session.setAttribute("terca", lista.get(1));
+		session.setAttribute("quarta", lista.get(2));
+		session.setAttribute("quinta", lista.get(3));
+		session.setAttribute("sexta", lista.get(4));
+		session.setAttribute("sabado", lista.get(5));
 
 		session.setAttribute("dias", dias);
 		session.setAttribute("horarios_size", listaHorarios.size());
 		session.setAttribute("titulo_busca", titulo);
 		session.setAttribute("currentSala", sala);
 		session.setAttribute("horarios", listaHorarios);
-		session.setAttribute("horario_sala", lista);
+		//session.setAttribute("horario_sala", lista);
 	}
 
 	public void error(String message) {

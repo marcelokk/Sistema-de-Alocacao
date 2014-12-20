@@ -2,10 +2,10 @@ package control;
 
 public class Celula {
 	private String conteudo;
-	private int pula;
+	private boolean pula;
 	private int tamanho;
 	
-	public Celula(String conteudo, int tamanho, int pula) {
+	public Celula(String conteudo, int tamanho, boolean pula) {
 		this.conteudo = conteudo;
 		this.pula = pula;
 		this.tamanho = tamanho;
@@ -13,7 +13,7 @@ public class Celula {
 	
 	public Celula() {
 		conteudo = "";
-		pula = 0;
+		pula = false;
 		tamanho = 1;
 	}
 	
@@ -25,11 +25,11 @@ public class Celula {
 		this.conteudo = conteudo;
 	}
 
-	public int getPula() {
+	public boolean getPula() {
 		return pula;
 	}
 
-	public void setPula(int pula) {
+	public void setPula(boolean pula) {
 		this.pula = pula;
 	}
 

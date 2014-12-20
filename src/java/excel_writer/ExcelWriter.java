@@ -1,5 +1,6 @@
 package excel_writer;
 
+import control.Celula;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -64,19 +65,22 @@ public class ExcelWriter {
 		bold.setBorderTop(CellStyle.BORDER_THIN);
 		bold.setTopBorderColor(IndexedColors.BLACK.getIndex());
 
-		HSSFCellStyle blue = workbook.createCellStyle();
-		bold.setFillForegroundColor(HSSFColor.LIGHT_BLUE.index);
-
-		HSSFCellStyle green = workbook.createCellStyle();
-		green.setFillForegroundColor(HSSFColor.LIGHT_GREEN.index);
-
 		// String default para celulas celulas se conteudo
 		String default_cell = "-";
 
-		ArrayList<String> lista = new ArrayList();
+		//ArrayList<String> lista = new ArrayList();
 		ArrayList<String> listaHorarios = new ArrayList();
+		ArrayList<ArrayList<Celula>> lista = new ArrayList();
 
-		String[] dias = {"segunda", "terca", "quarta", "quinta", "sexta", "sabado"};
+		Celula c;
+
+		String[] dias = {"segunda",
+			"terca",
+			"quarta",
+			"quinta",
+			"sexta",
+			"sabado"
+		};
 
 		try {
 			// monta a lista de horarios
@@ -101,6 +105,7 @@ public class ExcelWriter {
 			int rownum = 0;
 			int cellnum = 0;
 			while (salas.next()) {
+				lista.clear();
 				String sala = salas.getString(1);
 				ResultSet result = Banco.getInstance().query("select h.id_horario, t.codigo_curso, t.codigo_disciplina, h.nome_sala from horario_sala h join turma t where h.codigo_turma = t.codigo and h.nome_sala = \'" + sala + "\' order by h.id_horario");
 
@@ -112,8 +117,6 @@ public class ExcelWriter {
 				sheet.addMergedRegion(new CellRangeAddress(rownum - 1, rownum - 1, cellnum - 1, cellnum - 1 + listaHorarios.size()));
 				cell.setCellStyle(bold);
 
-//				cell = row.createCell(cellnum);
-//				cell.setCellValue(sala);
 				// escreve os horarios
 				row = sheet.createRow(rownum++);
 				for (String s : listaHorarios) {
@@ -122,16 +125,60 @@ public class ExcelWriter {
 					cell.setCellStyle(bold);
 				}
 
-				// reseta lista
-				for (int i = 0; i < listaHorarios.size() * 7; i++) {
-					lista.add(default_cell);
+				// cada horario tem em um dia da semana
+				for (int i = 0; i < dias.length; i++) {
+					ArrayList<Celula> dia = new ArrayList();
+					for (int j = 0; j < listaHorarios.size(); j++) {
+						dia.add(new Celula());
+					}
+					lista.add(dia);
 				}
 
 				// guarda na lista o conteudo
 				while (result.next()) {
-					Integer i = result.getInt(1);
+					Integer id = result.getInt(1);
+
+					// recupera o numero de creditos da disciplina					
+					ResultSet creditos = Banco.getInstance().query("select d.numero_creditos from disciplina d where d.codigo = \'" + result.getString(3) + "\'");
+					creditos.next();
+					Integer ncreditos = creditos.getInt(1);
+
+					switch (ncreditos) {
+						case 2:
+						case 3:
+							//ncreditos = ncreditos;
+							break;
+						case 4:
+							ncreditos = 2;
+							break;
+						case 6:
+							ncreditos = 3;
+							break;
+						default:
+							ncreditos = 1;
+							break;
+					}
+
 					String tmp = result.getString(2) + " " + result.getString(3);
-					lista.set(i, tmp);
+
+					int linha = id / listaHorarios.size(); // qual dia esta o horario
+					int coluna = id % listaHorarios.size(); // me diz qual coluna esta o horario
+
+					c = new Celula(tmp, ncreditos, false);
+					lista.get(linha).set(coluna, c);
+				}
+
+				// acerta o tamanho de cada linha da tabela
+				for (ArrayList<Celula> a : lista) {
+					int tamanho = 0;
+					for (int i = 0; i < a.size(); i++) {
+						tamanho += a.get(i).getTamanho();
+						if (tamanho > listaHorarios.size()) {
+							for (int j = i; j < a.size();) {
+								a.remove(j);
+							}
+						}
+					}
 				}
 
 				// escreve os dias da semana
@@ -143,16 +190,30 @@ public class ExcelWriter {
 					cell.setCellStyle(bold);
 
 					// salva o conteudo no sheet
-					for (int j = 0; j < listaHorarios.size(); j++) {
+					for (Celula conteudo : lista.get(i)) {
 						cell = row.createCell(cellnum++);
-						String conteudo = lista.get(j + i * listaHorarios.size());
-						if (conteudo.equals(default_cell)) {
-							cell.setCellStyle(blue);
-						} else {
-							cell.setCellStyle(green);
-						}
+						/* cor das celulas
+						 if (conteudo.equals(default_cell)) {
+						 box.setFillForegroundColor(IndexedColors.LIGHT_BLUE.getIndex());
+						 box.setFillPattern(CellStyle.SOLID_FOREGROUND);
+						 } else {
+						 box.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
+						 box.setFillPattern(CellStyle.SOLID_FOREGROUND);
+						 }
+						 */
+
 						cell.setCellStyle(box);
-						cell.setCellValue(conteudo);
+						cell.setCellValue(conteudo.getConteudo());
+
+						if (conteudo.getTamanho() > 1) {
+							int tamanho = conteudo.getTamanho();
+							sheet.addMergedRegion(new CellRangeAddress(rownum - 1, rownum - 1, cellnum - 1, cellnum - 2 + tamanho));
+							cellnum = cellnum + tamanho -1;
+							System.err.println("Conteudo: " + conteudo.getConteudo() + " " + (cellnum - 1) + " " + (cellnum - 2 + tamanho));
+						}
+						if (conteudo.getPula()) {
+							break;
+						}
 					}
 				}
 				// pula uma linha entre as salas
@@ -176,10 +237,9 @@ public class ExcelWriter {
 			 }
 			 }
 			 */
-			
 			// ajusta o tamanho das colunas
 			for (int i = 0; i < listaHorarios.size(); i++) {
-				sheet.autoSizeColumn(i);
+				sheet.autoSizeColumn(i, true);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
