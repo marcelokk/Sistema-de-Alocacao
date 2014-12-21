@@ -246,9 +246,11 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 					System.out.println("File Upload Failed due to " + ex);
 				}
 				session.setAttribute("mensagem_excel", mensagem.get(mensagem.size() - 1));
-				for (String s : mensagem) {
-					System.err.println(s);
-				}
+				/*
+				 for (String s : mensagem) {
+				 System.err.println(s);
+				 }
+				 */
 			} else {
 				request.setAttribute("message", "Sorry this Servlet only handles file upload request");
 				System.out.println("Nao e' multipart content");
@@ -331,7 +333,7 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 				default:
 					break;
 			}
-			ResultSet result = Banco.getInstance().query("select h.id_horario, t.codigo_curso, t.codigo_disciplina, h.nome_sala from horario_sala h join turma t where " + sql + " order by h.id_horario");
+			ResultSet result = Banco.getInstance().query("select h.id_horario, t.codigo_curso, t.codigo_disciplina, h.nome_sala, t.codigo from horario_sala h join turma t where " + sql + " order by h.id_horario");
 
 			while (horarios.next()) {
 				Integer tempo = horarios.getInt(1);
@@ -345,16 +347,23 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 				}
 				listaHorarios.add(inicio);
 			}
-
+					
 			// cada horario tem em um dia da semana
 			for (int i = 0; i < dias.length; i++) {
 				ArrayList<Celula> dia = new ArrayList();
-				for (int j = 0; j < listaHorarios.size(); j++) {
-					dia.add(new Celula());
-				}
+				//for (int j = 0; j < listaHorarios.size(); j++) {
+				//	dia.add(new Celula());
+				//}
 				lista.add(dia);
 			}
 
+			Celula[][] celulas = new Celula[dias.length][listaHorarios.size()];
+			for (int i = 0; i < dias.length; i++) {
+				for (int j = 0; j < listaHorarios.size(); j++) {
+					celulas[i][j] = null;
+				}
+			}				
+			
 			while (result.next()) {
 				Integer id = result.getInt(1);	// id do horario
 				String tmp = null;				// conteudo da celula
@@ -373,7 +382,16 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 						ncreditos = 2;
 						break;
 					case 6:
-						ncreditos = 3;
+						ResultSet result_tmp = Banco.getInstance().query("select id_horario from horario_turma h where h.codigo_turma = \'" + result.getInt(5) + "\'");
+						int count = 0;
+						while (result_tmp.next()) {
+							count++;
+						}
+						if (count == 3) {
+							ncreditos = 2;
+						} else {
+							ncreditos = 3;
+						}
 						break;
 					default:
 						ncreditos = 1;
@@ -397,25 +415,41 @@ public class Servlet extends HttpServlet { // implements ServletInterface
 				int coluna = id % listaHorarios.size(); // me diz qual coluna esta o horario
 
 				c = new Celula(tmp, ncreditos, false);
-				lista.get(linha).set(coluna, c);
+				celulas[linha][coluna] = c;
+				//lista.get(linha).set(coluna, c);
+			}
+
+			System.err.println("i " + dias.length + " j " + listaHorarios.size());
+			for (int i = 0; i < dias.length; i++) {
+				for (int j = 0; j < listaHorarios.size(); j++) {
+					System.err.println("i " + i + " j " + j);
+					if (celulas[i][j] == null) {
+						lista.get(i).add(new Celula());
+					} else {
+						lista.get(i).add(celulas[i][j]);
+						j += celulas[i][j].getTamanho() - 1;
+					}
+				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 
+		/*
 		// acerta o tamanho de cada linha da tabela
 		for (ArrayList<Celula> a : lista) {
 			int tamanho = 0;
 			for (int i = 0; i < a.size(); i++) {
 				tamanho += a.get(i).getTamanho();
 				if (tamanho > listaHorarios.size()) {
-					for (int j = i; j < a.size(); ) {
+					for (int j = i; j < a.size();) {
 						a.remove(j);
 					}
 				}
 			}
 		}
-
+		*/
+		// Print para debug
 		int i = 0, j = 0;
 		System.out.println("Lista");
 		for (ArrayList<Celula> a : lista) {

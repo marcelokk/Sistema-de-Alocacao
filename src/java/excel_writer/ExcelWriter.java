@@ -107,7 +107,7 @@ public class ExcelWriter {
 			while (salas.next()) {
 				lista.clear();
 				String sala = salas.getString(1);
-				ResultSet result = Banco.getInstance().query("select h.id_horario, t.codigo_curso, t.codigo_disciplina, h.nome_sala from horario_sala h join turma t where h.codigo_turma = t.codigo and h.nome_sala = \'" + sala + "\' order by h.id_horario");
+				ResultSet result = Banco.getInstance().query("select h.id_horario, t.codigo_curso, t.codigo_disciplina, h.nome_sala, t.codigo  from horario_sala h join turma t where h.codigo_turma = t.codigo and h.nome_sala = \'" + sala + "\' order by h.id_horario");
 
 				// escreve nome da sala
 				cellnum = 0;
@@ -128,10 +128,17 @@ public class ExcelWriter {
 				// cada horario tem em um dia da semana
 				for (int i = 0; i < dias.length; i++) {
 					ArrayList<Celula> dia = new ArrayList();
-					for (int j = 0; j < listaHorarios.size(); j++) {
-						dia.add(new Celula());
-					}
+					//for (int j = 0; j < listaHorarios.size(); j++) {
+					//	dia.add(new Celula());
+					//}
 					lista.add(dia);
+				}
+
+				Celula[][] celulas = new Celula[dias.length][listaHorarios.size()];
+				for (int i = 0; i < dias.length; i++) {
+					for (int j = 0; j < listaHorarios.size(); j++) {
+						celulas[i][j] = null;
+					}
 				}
 
 				// guarda na lista o conteudo
@@ -152,8 +159,16 @@ public class ExcelWriter {
 							ncreditos = 2;
 							break;
 						case 6:
-							ncreditos = 3;
-							break;
+							ResultSet result_tmp = Banco.getInstance().query("select id_horario from horario_turma h where h.codigo_turma = \'" + result.getInt(5) + "\'");
+							int count = 0;
+							while (result_tmp.next()) {
+								count++;
+							}
+							if (count == 3) {
+								ncreditos = 2;
+							} else {
+								ncreditos = 3;
+							}
 						default:
 							ncreditos = 1;
 							break;
@@ -165,9 +180,23 @@ public class ExcelWriter {
 					int coluna = id % listaHorarios.size(); // me diz qual coluna esta o horario
 
 					c = new Celula(tmp, ncreditos, false);
-					lista.get(linha).set(coluna, c);
+					celulas[linha][coluna] = c;
+					//lista.get(linha).set(coluna, c);
 				}
 
+				for (int i = 0; i < dias.length; i++) {
+					for (int j = 0; j < listaHorarios.size(); j++) {
+						System.err.println("i " + i + " j " + j);
+						if (celulas[i][j] == null) {
+							lista.get(i).add(new Celula());
+						} else {
+							lista.get(i).add(celulas[i][j]);
+							j += celulas[i][j].getTamanho() - 1;
+						}
+					}
+				}
+
+				/*
 				// acerta o tamanho de cada linha da tabela
 				for (ArrayList<Celula> a : lista) {
 					int tamanho = 0;
@@ -180,6 +209,7 @@ public class ExcelWriter {
 						}
 					}
 				}
+				*/
 
 				// escreve os dias da semana
 				for (int i = 0; i < dias.length; i++) {
@@ -208,7 +238,7 @@ public class ExcelWriter {
 						if (conteudo.getTamanho() > 1) {
 							int tamanho = conteudo.getTamanho();
 							sheet.addMergedRegion(new CellRangeAddress(rownum - 1, rownum - 1, cellnum - 1, cellnum - 2 + tamanho));
-							cellnum = cellnum + tamanho -1;
+							cellnum = cellnum + tamanho - 1;
 							System.err.println("Conteudo: " + conteudo.getConteudo() + " " + (cellnum - 1) + " " + (cellnum - 2 + tamanho));
 						}
 						if (conteudo.getPula()) {

@@ -322,6 +322,25 @@ public class Banco extends BDConnection {
 	 */
 	// precisa checar sala, horario turma, 
 	public void inserir(int horario, String sala, int turma) throws SQLException {
+		/* DEBUG
+		ResultSet result = query("select h.inicio, h.diasem from horario h where h.id = " + horario);
+		Integer tempo = result.getInt(1);
+		Integer minutos = tempo % 60;
+		Integer hora = (tempo - minutos) / 60;
+		String inicio = null;
+		if (minutos == 0) {
+			inicio = hora.toString() + ":00";
+		} else {
+			inicio = hora.toString() + ":" + minutos.toString();
+		}
+		int dia = result.getInt(2);
+		String[] dias = {"segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo"};
+
+		result = query("select t.codigo_curso, t.codigo_disciplina from turma t where t.codigo = " + turma);
+		
+		System.err.println("inseriu a turma " + result.getString(1) + " na sala " + sala + " no horario " + inicio + " do dia " + dias[dia] + " disciplina " + result.getString(2));
+		//*/
+
 		String sql = ("INSERT INTO HORARIO_SALA VALUES(?,?,?,?,?);");
 
 		PreparedStatement pstm = con.prepareStatement(sql);
@@ -605,7 +624,7 @@ public class Banco extends BDConnection {
 		Horario.reset();
 		Turma.reset();
 
-		System.err.println("Fim do Reset " + drops.length);
+		//System.err.println("Fim do Reset " + drops.length);
 	}
 
 	/**
